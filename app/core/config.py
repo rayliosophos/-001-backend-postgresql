@@ -4,8 +4,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # Application
     APP_NAME: str
+    APP_DESCRIPTION: str
+    APP_VERSION: str
+    PRODUCTION: bool
+    CORS_ALLOW_ORIGINS: list[str]
     # PostgreSQL 
-    POSTGRES_URL: str
+    POSTGRES_DSN: str
     # Oracle 
     ORACLE_USER: str
     ORACLE_PASSWORD: str

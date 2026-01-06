@@ -72,4 +72,4 @@ def setup_logging(level: str = "INFO") -> None:
     logging.getLogger("asyncpg.connection").setLevel(logging.WARNING)
     logging.getLogger("oracledb").setLevel(logging.WARNING)
 
-    root_logger.info("✅ Logging initialized (daily + 20MB rotation)")
+    root_logger.info("Logging initialized (daily + 20MB rotation)")

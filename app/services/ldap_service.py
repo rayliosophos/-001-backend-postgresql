@@ -9,7 +9,6 @@ class LDAPService:
 
     @staticmethod
     def authenticate(username: str, password: str) -> bool:
-        logger.info("Authenticating user via LDAP")
         user_dn = f"uid={username},{settings.LDAP_BASE_DN}"
         server = Server(
             settings.LDAP_SERVER,
@@ -26,7 +25,6 @@ class LDAPService:
                 authentication=SIMPLE,
                 auto_bind=True,
             )
-            logger.info("LDAP authentication successful")
             return True
         except LDAPBindError:
             logger.warning("Invalid LDAP credentials")
