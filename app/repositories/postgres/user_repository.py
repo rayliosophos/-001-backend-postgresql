@@ -31,23 +31,14 @@ class UserRepository:
         email: EmailStr,
         phone: str,
         about: str,
-        created_by: str) -> str | None:
+        created_by: str
+    ) -> str | None:
         try:
             pool = get_pg_pool()
             async with pool.acquire() as conn:
                 result = await conn.fetchval(
                     "select f_create_user($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
-                    role_id,
-                    first_name,
-                    last_name,
-                    gender,
-                    photo,
-                    username,
-                    password,
-                    email,
-                    phone,
-                    about,
-                    created_by
+                    role_id, first_name, last_name, gender, photo, username, password, email, phone, about, created_by
                 )
             return result
         except Exception as e:
@@ -68,25 +59,14 @@ class UserRepository:
         phone: str,
         about: str,
         modified_by: str,
-        is_enabled: bool) -> str | None:
+        is_enabled: bool
+    ) -> str | None:
         try:
             pool = get_pg_pool()
             async with pool.acquire() as conn:
                 result = await conn.fetchval(
                     "select f_update_user($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
-                    guid,
-                    role_id,
-                    first_name,
-                    last_name,
-                    gender,
-                    photo,
-                    username,
-                    password,
-                    email,
-                    phone,
-                    about,
-                    modified_by,
-                    is_enabled
+                    guid, role_id, first_name, last_name, gender, photo, username, password, email, phone, about, modified_by, is_enabled
                 )
             return result
         except Exception as e:
@@ -99,8 +79,7 @@ class UserRepository:
             async with pool.acquire() as conn:
                 result = await conn.fetchval(
                     "select f_delete_user($1, $2)",
-                    guid,
-                    deleted_by
+                    guid, deleted_by
                 )
             return result
         except Exception as e:
@@ -113,11 +92,11 @@ class UserRepository:
             async with pool.acquire() as conn:
                 result = await conn.fetchrow(
                     "select * from f_get_list_users($1, $2, $3, $4, $5, $6)",
-                    page_number,
-                    page_size,
-                    search,
-                    datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None,
-                    datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None,
+                    page_number, 
+                    page_size, 
+                    search, 
+                    datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None, 
+                    datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None, 
                     order_by
                 )
                 if result['out_error'] != "SUCCESS":

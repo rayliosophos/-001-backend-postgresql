@@ -1,6 +1,6 @@
 import time
-import logging
 import uuid
+import logging
 from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger("timing")

@@ -1,7 +1,6 @@
 import logging
-from typing import Dict, Any
-
 from h11 import Request
+from typing import Dict, Any
 from app.repositories.postgres.audit_repository import AuditRepository
 
 logger = logging.getLogger(__name__)
@@ -18,14 +17,12 @@ class AuditService:
         resource: str,
         request_body: Dict[str, Any],
     ) -> None:
-        # --- IP address ---
         x_forwarded_for = request.headers.get("x-forwarded-for")
-        ip_address = (
-            x_forwarded_for.split(",")[0].strip()
-            if x_forwarded_for
-            else request.client.host if request.client else None
-        )
-        # --- User agent ---
+        ip_address = None
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(",")[0].strip()
+        elif request.client:
+            ip_address = request.client.host
         user_agent = request.headers.get("user-agent")
         log_data = {
             "trace_id": request.state.trace_id,

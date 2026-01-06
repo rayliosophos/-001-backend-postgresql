@@ -24,7 +24,7 @@ def create_app() -> FastAPI:
     # Middleware
     setup_middlewares(app)
     
-    # 
+    # Mount
     app.mount("/static", StaticFiles(directory="static"), name="static" )
 
     # Routers

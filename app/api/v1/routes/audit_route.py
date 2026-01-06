@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends
 from app.services.audit_service import AuditService
 from app.utils.response_handler import ResponseHandler
 from app.dependencies.audit_dep import get_audit_service
-from app.dependencies.security_dep import get_current_sub
 from app.dependencies.require_permission_dep import require_permissions
 
 logger = logging.getLogger(__name__)
@@ -29,6 +28,6 @@ async def get_list_audit(
         order_by=order_by
     )
     if result["error"] != "SUCCESS":
-        logger.error("Failed to retrieve audit list with parameters: page_number=%s, page_size=%s, search=%s, start_date=%s, end_date=%s, order_by=%s", page_number, page_size, search, start_date, end_date, order_by)
+        logger.error("Failed to retrieve audit list.")
         return ResponseHandler.generate_response_unsuccessful(400, result["error"])
     return ResponseHandler.generate_response_successful("Audit list retrieved successfully.", result)

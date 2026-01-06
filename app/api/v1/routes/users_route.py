@@ -3,9 +3,9 @@ import csv
 import logging
 from fastapi.params import Query
 from fastapi.responses import StreamingResponse
+from app.utils.files_handler import FilesHandler
 from app.services.users_service import UserService
 from app.services.audit_service import AuditService
-from app.utils.files_handler import FilesHandler
 from app.utils.response_handler import ResponseHandler
 from app.dependencies.users_dep import get_user_service
 from app.dependencies.audit_dep import get_audit_service
@@ -45,8 +45,7 @@ async def create_user(
     guid: str = Depends(get_current_sub),
 ):
     if payload.photo and not FilesHandler.move_to_profile_image(payload.photo):
-        return ResponseHandler.generate_response_unsuccessful(400, "Moved file error.")
-            
+        return ResponseHandler.generate_response_unsuccessful(400, "Moved file error.")      
     result = await user_service.create_user(payload, created_by=guid)
     if result != "SUCCESS":
         logger.error("User creation failed for payload: %s", payload)
@@ -95,7 +94,7 @@ async def delete_user(
 ):
     result = await user_service.delete_user(guid=guid_to_delete, deleted_by=guid)
     if result != "SUCCESS":
-        logger.error("User deletion failed for GUID: %s", guid_to_delete)
+        logger.error("User deletion failed.",)
         return ResponseHandler.generate_response_unsuccessful(400, result)
     background_tasks.add_task(
         audit_service.log_action,
@@ -130,7 +129,7 @@ async def get_list_users(
         order_by=order_by
     )
     if result["error"] != "SUCCESS":
-        logger.error("Failed to retrieve user list with parameters: page_number=%s, page_size=%s, search=%s, start_date=%s, end_date=%s, order_by=%s", page_number, page_size, search, start_date, end_date, order_by)
+        logger.error("Failed to retrieve user list.")
         return ResponseHandler.generate_response_unsuccessful(400, result["error"])
     background_tasks.add_task(
         audit_service.log_action,
@@ -170,7 +169,7 @@ async def export_csv(
         order_by=order_by
     )
     if result["error"] != "SUCCESS":
-        logger.error("Failed to exported user list with parameters: page_number=%s, page_size=%s, search=%s, start_date=%s, end_date=%s, order_by=%s", 1, 1000000, search, start_date, end_date, order_by)
+        logger.error("Failed to exported user list.")
         return ResponseHandler.generate_response_unsuccessful(400, result["error"])
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=result["data"][0].keys())

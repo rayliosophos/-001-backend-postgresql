@@ -10,10 +10,6 @@ class Settings(BaseSettings):
     CORS_ALLOW_ORIGINS: list[str]
     # PostgreSQL 
     POSTGRES_DSN: str
-    # Oracle 
-    ORACLE_USER: str
-    ORACLE_PASSWORD: str
-    ORACLE_DSN: str
     # Logging
     LOG_LEVEL: str
     # JWT
