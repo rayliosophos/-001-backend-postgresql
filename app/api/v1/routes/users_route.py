@@ -74,7 +74,7 @@ async def update_user(
     payload.modify_by = guid
     result = await user_service.update_user(conn=conn, data=payload)
     if result != "SUCCESS":
-        logger.error("User updating failed for payload: %s", payload)
+        logger.error("User updating failed.")
         return ResponseHandler.generate_response_unsuccessful(400, result)
     background_tasks.add_task(
         audit_service.log_action,
