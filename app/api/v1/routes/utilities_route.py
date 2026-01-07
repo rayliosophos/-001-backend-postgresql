@@ -5,9 +5,9 @@ from uuid import uuid4
 from typing import List
 from pathlib import Path
 from fastapi.responses import FileResponse
+from app.api.v1.deps import require_permissions
 from app.utils.response_handler import ResponseHandler
 from fastapi import APIRouter, Depends, File, UploadFile
-from app.dependencies.require_permission_dep import require_permissions
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/utility", tags=["Utility"])

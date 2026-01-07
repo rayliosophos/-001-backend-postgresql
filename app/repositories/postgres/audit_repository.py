@@ -1,18 +1,15 @@
 import json
 import logging
+import asyncpg
 from typing import Any, Dict
 from datetime import datetime
-from app.db.postgres import get_pg_pool
 
 logger = logging.getLogger(__name__)
 
 class AuditRepository:
   
-  @staticmethod
-  async def write_log(data: dict):
-      try:
-        pool = get_pg_pool()
-        async with pool.acquire() as conn:
+    async def write_log(self, *, conn: asyncpg.Connection, data: dict):
+        try:
             await conn.execute(
                 """
                 call p_audit_logs( $1, $2, $3, $4, $5, $6, $7, $8 )
@@ -26,13 +23,11 @@ class AuditRepository:
                 json.dumps(data["request_body"]),
                 data["guid"]
             )
-      except Exception as e:
-        logger.error("Error writing audit log: %s", e)
-        
-  async def get_list_audit_logs(self, page_number: int, page_size: int, search: str, start_date: str, end_date: str, order_by: str) -> Dict[str, Any]:
-    try:
-        pool = get_pg_pool()
-        async with pool.acquire() as conn:
+        except Exception as e:
+            logger.error("Error writing audit log: %s", e)
+            
+    async def get_list_audit_logs(self, *, conn: asyncpg.Connection, page_number: int, page_size: int, search: str, start_date: str, end_date: str, order_by: str) -> Dict[str, Any]:
+        try:
             result = await conn.fetchrow(
                 "select * from f_get_list_audit_logs($1, $2, $3, $4, $5, $6)",
                 page_number,
@@ -49,11 +44,11 @@ class AuditRepository:
                     "data": [],
                     "error": result['out_error']
                 }
-        return {
-            "total_pages": result["out_total_pages"],
-            "data": json.loads(result["out_data"]) if result["out_data"] else [],
-            "error": "SUCCESS"
-        }
-    except Exception as e:
-        logger.error("Error getting list of audit: %s", e)
-        return None
+            return {
+                "total_pages": result["out_total_pages"],
+                "data": json.loads(result["out_data"]) if result["out_data"] else [],
+                "error": "SUCCESS"
+            }
+        except Exception as e:
+            logger.error("Error getting list of audit: %s", e)
+            return None

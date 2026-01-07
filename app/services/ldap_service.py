@@ -8,14 +8,13 @@ logger = logging.getLogger(__name__)
 class LDAPService:
 
     @staticmethod
-    def authenticate(username: str, password: str) -> bool:
+    def authenticate(*, username: str, password: str) -> bool:
         user_dn = f"uid={username},{settings.LDAP_BASE_DN}"
         server = Server(
             settings.LDAP_SERVER,
             port=settings.LDAP_PORT,
             connect_timeout=settings.LDAP_TIMEOUT,
-            # use_ssl=True, # Uncomment if LDAP server requires SSL
-            use_ssl=False, # Set to False for non-SSL connections
+            use_ssl=False, # Set to False for non-SSL connections, Production True
         )
         try:
             conn = Connection(

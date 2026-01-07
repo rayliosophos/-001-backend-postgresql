@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.db.postgres import init_pg_pool, close_pg_pool
+from app.database.postgres import init_pg_pool, close_pg_pool
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,6 @@
 import io
 import csv
+import asyncpg
 import logging
 from fastapi.params import Query
 from fastapi.responses import StreamingResponse
@@ -7,23 +8,22 @@ from app.utils.files_handler import FilesHandler
 from app.services.users_service import UserService
 from app.services.audit_service import AuditService
 from app.utils.response_handler import ResponseHandler
-from app.dependencies.users_dep import get_user_service
-from app.dependencies.audit_dep import get_audit_service
 from app.schemas.request.user_request import UserRequest
-from app.dependencies.security_dep import get_current_sub
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
-from app.dependencies.require_permission_dep import require_permissions
+from app.api.v1.deps import get_audit_service, get_db_conn, get_user_service, require_permissions
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/user", tags=["Users"])
 
-@router.get("/get-menu", dependencies=[Depends(require_permissions(["frontend-menu:read"]))])
+@router.get("/get-menu")
 async def get_user_menu(
     request: Request,
     background_tasks: BackgroundTasks,
-    guid: str = Depends(get_current_sub), 
+    guid: str = Depends(require_permissions(["frontend-menu:read"])), 
     user_service: UserService = Depends(get_user_service),
-    audit_service: AuditService = Depends(get_audit_service)
+    audit_service: AuditService = Depends(get_audit_service),
+    conn: asyncpg.Connection = Depends(get_db_conn)
 ):
     background_tasks.add_task(
         audit_service.log_action,
@@ -33,20 +33,21 @@ async def get_user_menu(
         resource="/user/get-user-menu",
         request_body={},
     )
-    return ResponseHandler.generate_response_successful("User menu retrieved successfully.", await user_service.get_user_menu(guid))
+    return ResponseHandler.generate_response_successful("User menu retrieved successfully.", await user_service.get_user_menu(conn=conn,guid=guid))
 
-@router.post("/create", dependencies=[Depends(require_permissions(["user:write"]))])
+@router.post("/create")
 async def create_user(
     request: Request,
     background_tasks: BackgroundTasks,
     payload: UserRequest,
     user_service: UserService = Depends(get_user_service),
     audit_service: AuditService = Depends(get_audit_service),
-    guid: str = Depends(get_current_sub),
+    guid: str = Depends(require_permissions(["user:write"])),
+    conn: asyncpg.Connection = Depends(get_db_conn)
 ):
     if payload.photo and not FilesHandler.move_to_profile_image(payload.photo):
         return ResponseHandler.generate_response_unsuccessful(400, "Moved file error.")      
-    result = await user_service.create_user(payload, created_by=guid)
+    result = await user_service.create_user(conn=conn, data=payload, created_by=guid)
     if result != "SUCCESS":
         logger.error("User creation failed for payload: %s", payload)
         return ResponseHandler.generate_response_unsuccessful(400, result)
@@ -60,16 +61,18 @@ async def create_user(
     )
     return ResponseHandler.generate_response_successful("User created successfully.", None)
 
-@router.put("/update", dependencies=[Depends(require_permissions(["user:update"]))])
+@router.put("/update")
 async def update_user(
     request: Request,
     background_tasks: BackgroundTasks,
     payload: UserRequest,
     user_service: UserService = Depends(get_user_service),
     audit_service: AuditService = Depends(get_audit_service),
-    guid: str = Depends(get_current_sub),
+    guid: str = Depends(require_permissions(["user:update"])),
+    conn: asyncpg.Connection = Depends(get_db_conn)
 ):
-    result = await user_service.update_user(payload, modified_by=guid)
+    payload.modify_by = guid
+    result = await user_service.update_user(conn=conn, data=payload)
     if result != "SUCCESS":
         logger.error("User updating failed for payload: %s", payload)
         return ResponseHandler.generate_response_unsuccessful(400, result)
@@ -83,16 +86,17 @@ async def update_user(
     )
     return ResponseHandler.generate_response_successful("User updated successfully.", None)
 
-@router.delete("/delete", dependencies=[Depends(require_permissions(["user:delete"]))])
+@router.delete("/delete")
 async def delete_user(
     request: Request,
     background_tasks: BackgroundTasks,
     guid_to_delete: str,
     user_service: UserService = Depends(get_user_service),
     audit_service: AuditService = Depends(get_audit_service),
-    guid: str = Depends(get_current_sub),
+    guid: str = Depends(require_permissions(["user:delete"])),
+    conn: asyncpg.Connection = Depends(get_db_conn)
 ):
-    result = await user_service.delete_user(guid=guid_to_delete, deleted_by=guid)
+    result = await user_service.delete_user(conn=conn, guid=guid_to_delete, deleted_by=guid)
     if result != "SUCCESS":
         logger.error("User deletion failed.",)
         return ResponseHandler.generate_response_unsuccessful(400, result)
@@ -106,7 +110,7 @@ async def delete_user(
     )
     return ResponseHandler.generate_response_successful("User deleted successfully.", None)
 
-@router.get("/get-list-users", dependencies=[Depends(require_permissions(["user:read"]))])
+@router.get("/get-list-users")
 async def get_list_users(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -118,9 +122,11 @@ async def get_list_users(
     order_by: str = 'created_desc',
     user_service: UserService = Depends(get_user_service),
     audit_service: AuditService = Depends(get_audit_service),
-    guid: str = Depends(get_current_sub),
+    guid: str = Depends(require_permissions(["user:read"])),
+    conn: asyncpg.Connection = Depends(get_db_conn)
 ):
     result = await user_service.get_list_users(
+        conn=conn,
         page_number=page_number,
         page_size=page_size,
         search=search,
@@ -148,7 +154,7 @@ async def get_list_users(
     )
     return ResponseHandler.generate_response_successful("User list retrieved successfully.", result)
 
-@router.get("/export/csv", dependencies=[Depends(require_permissions(["user:read"]))])
+@router.get("/export/csv", )
 async def export_csv(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -158,9 +164,11 @@ async def export_csv(
     order_by: str = 'created_desc',
     user_service: UserService = Depends(get_user_service),
     audit_service: AuditService = Depends(get_audit_service),
-    guid: str = Depends(get_current_sub),
+    guid: str = Depends(require_permissions(["user:read"])),
+    conn: asyncpg.Connection = Depends(get_db_conn)
 ):
     result = await user_service.get_list_users(
+        conn=conn,
         page_number=1,
         page_size=1000000,
         search=search,

@@ -1,10 +1,10 @@
 import logging
+import asyncpg
 from fastapi.params import Query
 from fastapi import APIRouter, Depends
 from app.services.audit_service import AuditService
 from app.utils.response_handler import ResponseHandler
-from app.dependencies.audit_dep import get_audit_service
-from app.dependencies.require_permission_dep import require_permissions
+from app.api.v1.deps import get_audit_service, get_db_conn, require_permissions
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/audit", tags=["Audit"])
@@ -18,8 +18,10 @@ async def get_list_audit(
     end_date: str = None,
     order_by: str = 'created_desc',
     audit_service: AuditService = Depends(get_audit_service),
+    conn: asyncpg.Connection = Depends(get_db_conn)
 ):
     result = await audit_service.get_list_audit_logs(
+        conn=conn,
         page_number=page_number,
         page_size=page_size,
         search=search,
